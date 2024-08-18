@@ -1,0 +1,76 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group = 'org.web'
+version = '1.0-SNAPSHOT'
+
+ext{
+    dirWindFly = 'C:\\Users\\Aorus\\Documents\\wildfly-29.0.0.Final'
+    tomcatDir = 'C:\\Users\\Aorus\\Documents\\tom\\apache-tomcat-10.1.28'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly('jakarta.servlet:jakarta.servlet-api:6.0.0')
+    implementation('jakarta.annotation:jakarta.annotation-api:2.1.1')
+
+    implementation 'org.springframework:spring-web:6.1.5'
+    implementation 'org.springframework:spring-webmvc:6.1.5'
+
+    implementation 'org.springframework:spring-core:6.1.3'
+    implementation 'org.springframework:spring-beans:6.1.1'
+    implementation 'org.springframework:spring-context:6.1.1'
+
+    implementation 'org.springframework.security:spring-security-core:6.3.0'
+    implementation 'org.springframework.security:spring-security-web:6.3.0'
+    implementation 'org.springframework.security:spring-security-config:6.2.0'
+}
+
+war {
+    archiveFileName = 'web.war'
+}
+
+
+task deployToWildfly(type: Copy) {
+    dependsOn war
+    from file("$buildDir/libs/web.war")
+    into file("$dirWindFly/standalone/deployments")
+}
+
+task runWildfly(dependsOn: deployToWildfly) {
+    doLast {
+        exec {
+            workingDir "$dirWindFly/bin"
+            commandLine "$dirWindFly/bin/standalone.bat" // для Windows используйте 'standalone.bat'
+        }
+    }
+}
+
+task deployToTomcat(type: Copy) {
+    dependsOn war
+    from file("$buildDir/libs/web.war")
+    into file("$tomcatDir/webapps")
+}
+
+task startTomcat(dependsOn: deployToTomcat) {
+    doLast {
+        exec {
+            workingDir = file(tomcatDir)
+            commandLine './bin/startup.bat' // для Windows используйте 'startup.bat'
+        }
+    }
+}
+
+task stopTomcat {
+    doLast {
+        exec {
+            workingDir = file(tomcatDir)
+            commandLine './bin/shutdown.sh' // для Windows используйте 'shutdown.bat'
+        }
+    }
+}
